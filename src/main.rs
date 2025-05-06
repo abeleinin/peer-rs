@@ -1,23 +1,14 @@
-use env_logger;
-use log::{info};
-use anyhow::Result;
-
-use webrtc::api::APIBuilder;
-use webrtc::peer_connection::configuration::RTCConfiguration;
+mod signal;
 
 #[tokio::main]
-async fn main() -> Result<()> {
-    env_logger::init();
+async fn main() -> anyhow::Result<()> {
+    let port = 8080u16;
+    let mut inbox = signal::http_sdp_server(port).await;
 
-    let api = APIBuilder::new().build();
+    println!("Server up: POST base64 blobs to http://localhost:{port}");
 
-    let config = RTCConfiguration {
-        ..Default::default()
-    };
-
-    let peer_connection = api.new_peer_connection(config).await?;
-
-    info!("Starting WebRTC peer-to-peer audio connection...");
-    
+    while let Some(msg) = inbox.recv().await {
+        println!("received: {msg}");
+    }
     Ok(())
 }
