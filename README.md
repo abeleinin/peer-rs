@@ -2,10 +2,8 @@
 
 Simple rust application that streams audio between a peer-to-peer connection over WebRTC.
 
-## TODO
+## Running
 
-- [ ] Capture audio using `cpal`
-- [ ] Initialize WebRTC `PeerConnection`
-- [ ] SDP/ICE signaling
-- [ ] Sending and receiving audio data
-
+```
+cargo run --bin peer-rs
+```

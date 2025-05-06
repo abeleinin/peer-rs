@@ -1,0 +1,51 @@
+<!doctype html>
+
+<title>peer-rs offer helper</title>
+<style>
+  textarea { width: 95%; height: 6em; margin: .5em 0 }
+  button   { margin-right: 1em }
+</style>
+
+<h1>peer-rs</h1>
+
+<button id="make">Generate &amp; POST offer</button>
+<button id="finish" disabled>Apply Rust answer</button>
+
+<textarea id="ta"></textarea>
+
+<script>
+    const ta        = document.getElementById('ta');
+    const makeBtn   = document.getElementById('make');
+    const finishBtn = document.getElementById('finish');
+
+    let pc;
+
+    makeBtn.onclick = async () => {
+        pc = new RTCPeerConnection();
+        pc.createDataChannel("noop");
+        pc.onconnectionstatechange = e =>
+            console.log("browser state:", pc.connectionState);
+
+        await pc.setLocalDescription(await pc.createOffer());
+
+        const offerB64 = btoa(JSON.stringify(pc.localDescription));
+
+        // POST to the Rust signalling server
+        await fetch("http://localhost:8080/sdp", {
+            method: "POST",
+            mode:   "no-cors",
+            headers:{ "Content-Type": "text/plain" },
+            body:   offerB64
+        });
+
+        alert("Offer sent!\nNow copy the ANSWER printed by peer-rs,\n" +
+            "paste it below, and press 'Apply Rust answer'.");
+        finishBtn.disabled = false;
+    };
+
+    finishBtn.onclick = async () => {
+        const ans = JSON.parse(atob(ta.value.trim()));
+        await pc.setRemoteDescription(ans);
+        alert("Answer applied, watch the console for 'connected'.");
+    };
+</script>
